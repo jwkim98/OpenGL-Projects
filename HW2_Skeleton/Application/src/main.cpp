@@ -241,6 +241,12 @@ int main(int argc, char** argv)
     // Delete resources
     delete main_camera;
 
+    delete cube_mesh;
+    delete animation;
+    delete star_mesh;
+    delete material;
+    delete picking_material;
+
     glfwTerminate();
     return 0;
 
