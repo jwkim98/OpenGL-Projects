@@ -8,7 +8,6 @@ if(NOT DEFINED CMAKE_TOOLCHAIN_FILE)
   endif()
 
 endif()
-
 project(CS380)
 
 find_package(OpenGL REQUIRED)
