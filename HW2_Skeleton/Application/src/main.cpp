@@ -23,6 +23,7 @@
 #include <picking.hpp>
 #include <PickableObject.hpp>
 #include <Snowman.hpp>
+#include <deque>
 
 #define _USE_MATH_DEFINES
 
@@ -66,6 +67,88 @@ void GenerateGradientRectangle(Engine::Mesh* mesh)
 	mesh->CreateMesh();
 	// layout 0: vec4 pos := (x,y,z,w)
 	// uniform : vec4 color := (r,g,b,a)
+}
+
+void makeTriangleRecursion(int depth, glm::vec3 pointA, glm::vec3 pointB, double angle, std::deque<glm::vec3>& vertexList)
+{
+	if (depth == 0) return;
+
+	if (angle >= 360) angle -= 360;
+	if (angle <= -360) angle += 360;
+
+	auto radian = static_cast<float>((angle*glm::pi<float>()) / 180);
+
+	/// Calculate two points that divides the line in to 3
+	glm::vec3 innerA = glm::vec3((2 * pointA.x + pointB.x) / 3, (2 * pointA.y + pointB.y) / 3, 0.0f);
+	glm::vec3 innerB = glm::vec3((pointA.x + 2 * pointB.x) / 3, (pointA.y + 2 * pointB.y) / 3, 0.0f);
+
+	/// Calculate length between two points, innerA and innerB
+	float lengthSquared = pow((pointB.x - pointA.x), 2) + pow((pointB.y - pointA.y), 2);
+	float length = sqrt(lengthSquared) / 3;
+
+	/// Calculates length of line which is orthogonal to previous line, and ends at new point
+	float lengthToNewpoint = length * (sqrt(3) / 2);
+
+	glm::vec3 middlePoint = glm::vec3((pointA.x + pointB.x) / 2, (pointA.y + pointB.y) / 2, 0.0f);
+	/// Calculate new point with given middlepoint and length to new point
+	glm::vec3 newPoint = glm::vec3((middlePoint.x + lengthToNewpoint * cos(radian)),
+		middlePoint.y + lengthToNewpoint * sin(radian), 0.0f);
+
+	/// push 3 new points to vertexList vector
+	vertexList.emplace_back(innerA);
+	vertexList.emplace_back(newPoint);
+	vertexList.emplace_back(innerB);
+
+	/// Make recursive calls on 4 lines
+	makeTriangleRecursion(depth - 1, pointA, innerA, angle, vertexList);
+	makeTriangleRecursion(depth - 1, innerA, newPoint, angle - 60.0, vertexList);
+	makeTriangleRecursion(depth - 1, newPoint, innerB, angle + 60.0, vertexList);
+	makeTriangleRecursion(depth - 1, innerB, pointB, angle, vertexList);
+}
+
+void GenerateSnowflake(Engine::Mesh* mesh, float length, float positionX, float positionY, unsigned seed)
+{
+	std::deque<glm::vec3> vertexList = std::deque<glm::vec3>();// Initializes dequeue
+	srand(seed);
+	std::deque<glm::vec3> colorList{ glm::vec3(std::rand() / RAND_MAX ,0,0),
+	glm::vec3(rand() / RAND_MAX,1,0),
+	glm::vec3(rand() / RAND_MAX,0,1) };
+
+
+	mesh->AddAttribute(4); //x,y,z,w
+	mesh->AddAttribute(4); //r,g,b,w;
+
+	if (vertexList.empty()) {
+		auto pointA = glm::vec3(-length / 2 + positionX, -length / 2 + positionY, 0.0f);
+		auto pointB = glm::vec3(length / 2 + positionX, -length / 2 + positionY, 0.0f);
+		auto pointC = glm::vec3(0.0f + positionX, length*cos((30 * glm::pi<float>()) / 180) - length / 2 + positionY, 0.0f);
+
+		vertexList.emplace_back(pointA);
+		vertexList.emplace_back(pointB);
+		vertexList.emplace_back(pointC);
+
+		makeTriangleRecursion(3 - 1, pointA, pointB, -90.0, vertexList);
+		makeTriangleRecursion(3- 1, pointB, pointC, 30.0, vertexList);
+		makeTriangleRecursion(3 - 1, pointC, pointA, 150.0, vertexList);
+	}
+
+	if (!vertexList.empty() && !colorList.empty()) {
+		size_t colorListIndex = 0;
+
+		for (unsigned i = 0; i < vertexList.size(); i++) {
+			glm::vec3 vect = vertexList.at(i);
+			mesh->AddVertexData(vect); //Vertex
+			mesh->AddVertexData(1.0f);
+			mesh->AddVertexData(colorList.at(colorListIndex++));
+			mesh->AddVertexData(1.0f);
+
+			if (colorListIndex == colorList.size())
+				colorListIndex = 0;
+		}
+
+		mesh->SetNumElements(static_cast<int>(vertexList.size()));
+		mesh->CreateMesh();
+	}
 }
 
 // TODO: Fill up GLFW mouse button callback function
@@ -191,9 +274,6 @@ int main(int argc, char** argv)
 
 	Animation* animation = new Animation();
 
-	Engine::Mesh* star_mesh = new Engine::Mesh();
-	geometry.GenerateStar(star_mesh);
-
     DefaultMaterial* material = new DefaultMaterial();
     material->CreateMaterial();
 
@@ -214,7 +294,7 @@ int main(int argc, char** argv)
 
     PickableObject sphere1 = PickableObject(sphere_mesh1, material);
     sphere1.SetPickingMat(picking_material);
-    sphere1.SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+    sphere1.SetPosition(glm::vec3(0.0f, 2.0f, 2.0f));
 	sphere1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(60.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
     sphere1.SetIndex(1);
 
@@ -268,10 +348,18 @@ int main(int argc, char** argv)
 	snowman.body = &sphere2;
 	
 
+	std::deque<Engine::Mesh*> star_mesh_list;
+	for( auto i =0; i < 20; i++)
+	{
+		Engine::Mesh* star_mesh = new Engine::Mesh();
+		GenerateSnowflake(star_mesh, 5, 0, 0, i);
+		star_mesh_list.emplace_back(star_mesh);
+	}
+
 	// Create star objects
 	for (int i = 0; i < 20; i++)
 	{
-		Engine::RenderObject* star = new Engine::RenderObject(star_mesh, material);
+		Engine::RenderObject* star = new Engine::RenderObject(star_mesh_list.at(i), &background_material);
 		star->SetPosition(glm::vec3(-5.0f + 10.0f * ((rand() % 255) / 255.0f), 5.0f * ((rand() % 255) / 255.0f), 0.0f));
 		star->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
 		animation->AddObject(star);
@@ -347,11 +435,15 @@ int main(int argc, char** argv)
         glfwPollEvents();
     }
 
+	for(auto ptr : star_mesh_list)
+	{
+		delete ptr;
+	}
+
     // Delete resources
     delete main_camera;
 	delete cube_mesh;
 	delete animation;
-	delete star_mesh;
 	delete material;
 	delete picking_material;
 	delete sphere_mesh1;
