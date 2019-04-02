@@ -16,4 +16,5 @@ public:
 	PickableObject* head;
 	void rotate_head();
 	void rotate_body();
+	void rotate_head(double x_angle, double y_angle);
 };

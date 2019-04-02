@@ -208,11 +208,11 @@ void Geometry::GenerateCylinder(Engine::Mesh* mesh, double radius, double height
 		vec4 pos_1 = vec4(x_pre, y_pre, 0, 1);
 		vec4 pos_2 = vec4(x, y, 0, 1);
 
-		Triple(mesh, pos_1, pos_2, base_lower);
+		Triple(mesh, base_lower, pos_2, pos_1);
 		num_elements += 3;
 	}
 
-	vec4 base_upper = vec4(0, 0, height, 1);
+	vec4 base_upper = vec4(0, 0, height - height_precision, 1);
 
 	for (double angle = 0; angle < 2 * glm::pi<double>(); angle += precision)
 	{
@@ -222,8 +222,8 @@ void Geometry::GenerateCylinder(Engine::Mesh* mesh, double radius, double height
 		double y_pre = radius * sin(angle - precision);
 		double y = radius * sin(angle);
 
-		vec4 pos_1 = vec4(x_pre, y_pre, height, 1);
-		vec4 pos_2 = vec4(x, y, height, 1);
+		vec4 pos_1 = vec4(x_pre, y_pre, height - height_precision, 1);
+		vec4 pos_2 = vec4(x, y, height - height_precision, 1);
 
 		Triple(mesh, pos_1, pos_2, base_upper);
 		num_elements += 3;

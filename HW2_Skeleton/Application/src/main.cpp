@@ -78,6 +78,7 @@ static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action
         glfwGetCursorPos(a_window, &xpos, &ypos);
         xpos = xpos / ((double)g_window_width) * ((double)g_framebuffer_width);
         ypos = ypos / ((double)g_window_height) * ((double)g_framebuffer_height);
+
         int target = pick((int)xpos, (int)ypos, g_framebuffer_width, g_framebuffer_height);
         std::cout << "Picked object index: " << target << std::endl;
 
@@ -92,10 +93,24 @@ static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action
     }
 }
 
-// TODO: Fill up GLFW cursor position callback function
-static void CursorPosCallback(GLFWwindow* a_window, double a_xpos, double a_ypos)
-{
+static double diff_x;
+static double diff_y;
 
+// TODO: Fill up GLFW cursor position callback function
+static void CursorPosCallback(GLFWwindow* a_window, double xpos, double ypos)
+{
+	static double previous_xpos = 0, previous_ypos = 0;
+	if(previous_xpos == 0 && previous_ypos == 0)
+	{
+		previous_xpos = xpos;
+		previous_ypos = ypos;
+	}
+
+	diff_x = xpos - previous_xpos;
+	diff_y = ypos - previous_ypos;
+
+	previous_xpos = xpos;
+	previous_ypos = ypos;
 }
 
 static void KeyboardCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, int a_mods)
@@ -223,7 +238,7 @@ int main(int argc, char** argv)
 	cylinder1.SetPickingMat(picking_material);
 	cylinder1.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 	cylinder1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-	cylinder1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+	cylinder1.SetOrientation(glm::rotate(cylinder1.GetOrientation(), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
 	cylinder1.SetPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
 	cylinder1.SetIndex(4);
 	cylinder1.AddParent(&sphere2);
@@ -232,11 +247,19 @@ int main(int argc, char** argv)
 	cylinder2.SetPickingMat(picking_material);
 	cylinder2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 	cylinder2.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-	cylinder2.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+	cylinder2.SetOrientation(glm::rotate(cylinder2.GetOrientation(), glm::radians(-10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
 	cylinder2.SetPosition(glm::vec3(2.0f, 0.0f, 0.0f));
 	cylinder2.SetIndex(5);
 	cylinder2.AddParent(&sphere2);
 
+	DefaultMaterial background_material = DefaultMaterial();
+	background_material.CreatePerVertexMaterial();
+
+	Engine::Mesh background_mesh = Engine::Mesh();
+	GenerateGradientRectangle(&background_mesh);
+
+	Engine::RenderObject background = Engine::RenderObject(&background_mesh, &background_material);
+	
 
 
 
@@ -265,11 +288,18 @@ int main(int argc, char** argv)
 
 		if (head_spin)
 		{
-			snowman.rotate_head();
+			//snowman.rotate_head();
 		}
 		if (body_spin)
 		{
 			snowman.rotate_body();
+		}
+
+		if(diff_x != 0 || diff_y != 0)
+		{
+			snowman.rotate_head(diff_x/3, diff_y/3);
+			diff_x = 0;
+			diff_y = 0;
 		}
 
         // First Pass: Object Selection (Slide No. 20)
@@ -307,6 +337,8 @@ int main(int argc, char** argv)
 		
 		material->UpdateColor(glm::vec4(1.0f, 215.0f/ 256.0f, 0.0f,1.0f));
 		animation->Animate(main_camera, elapsed_time);
+
+		background.Render(main_camera);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
