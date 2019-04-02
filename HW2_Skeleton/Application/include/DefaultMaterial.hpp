@@ -8,5 +8,6 @@ private:
     glm::vec4 color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
 public:
     void CreateMaterial();
+	void CreatePerVertexMaterial();
     void UpdateColor(glm::vec4 color);
 };

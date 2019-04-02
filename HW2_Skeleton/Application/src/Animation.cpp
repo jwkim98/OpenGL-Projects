@@ -15,6 +15,11 @@ void Animation::AddObject(Engine::RenderObject* object)
     _objects.push_back(object);
 }
 
+void Animation::AddObjectToSnowman(Engine::RenderObject* object)
+{
+	_snowmanParts.emplace_back(object);
+}
+
 void Animation::Animate(Engine::Camera* cam, float deltaTime)
 {
     // Apply constant animation

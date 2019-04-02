@@ -19,4 +19,6 @@ public:
     void AddObject(Engine::RenderObject* object);
     void Animate(Engine::Camera* cam, float deltaTime);
 	void AnimateSnowman(Engine::Camera* cam, float deltaTime);
+	
+	void AddObjectToSnowman(Engine::RenderObject* object);
 };

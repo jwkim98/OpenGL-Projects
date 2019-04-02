@@ -133,7 +133,7 @@ void Geometry::GenerateCone(Engine::Mesh* mesh, double radius, double height)
 	double height_precision = 0.05;
 
 	double num_elements = 0;
-	vec4 base = vec4(0, 0, 0, 0);
+	vec4 base = vec4(0, 0, 0, 1);
 
 	for (double angle = 0; angle < 2 * glm::pi<double>(); angle += precision)
 	{
@@ -195,7 +195,7 @@ void Geometry::GenerateCylinder(Engine::Mesh* mesh, double radius, double height
 
 	double num_elements = 0;
 
-	vec4 base_lower = vec4(0, 0, 0, 0);
+	vec4 base_lower = vec4(0, 0, 0, 1);
 
 	for (double angle = 0; angle < 2 * glm::pi<double>(); angle += precision)
 	{
@@ -212,7 +212,7 @@ void Geometry::GenerateCylinder(Engine::Mesh* mesh, double radius, double height
 		num_elements += 3;
 	}
 
-	vec4 base_upper = vec4(0, 0, height, 0);
+	vec4 base_upper = vec4(0, 0, height, 1);
 
 	for (double angle = 0; angle < 2 * glm::pi<double>(); angle += precision)
 	{

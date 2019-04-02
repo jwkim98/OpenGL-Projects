@@ -36,6 +36,38 @@ int g_framebuffer_height = 768;
 bool head_spin = false;
 bool body_spin = false;
 
+// TODO: Implement gradient rectangle mesh generator for background
+void GenerateGradientRectangle(Engine::Mesh* mesh)
+{
+	mesh->AddAttribute(4); //x,y,z,w
+	mesh->AddAttribute(4); //r,g,b,w
+
+	std::vector<glm::vec3> vect{
+			glm::vec3(-10.0f, -10.0f, -1.0f),
+			glm::vec3(1.0f, 0.0f, 0.0f), //color
+			glm::vec3(10.0f, -10.0f, -1.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f), //color
+			glm::vec3(-10.0f, 10.0f, -1.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f), //color
+			glm::vec3(-10.0f, 10.0f, -1.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f), //color
+			glm::vec3(10.0f, -10.0f, -1.0f),
+			glm::vec3(0.0f, 1.0f, 0.0f), //color
+			glm::vec3(10.0f, 10.0f, -1.0f),
+			glm::vec3(0.0f, 0.0f, 1.0f) //color
+	};
+
+	for (auto elem : vect) {
+		mesh->AddVertexData(elem);
+		mesh->AddVertexData(1.0f);
+	}
+
+	mesh->SetNumElements(6);
+	mesh->CreateMesh();
+	// layout 0: vec4 pos := (x,y,z,w)
+	// uniform : vec4 color := (r,g,b,a)
+}
+
 // TODO: Fill up GLFW mouse button callback function
 static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a_mods)
 {
@@ -153,29 +185,64 @@ int main(int argc, char** argv)
     PickingMaterial* picking_material = new PickingMaterial();
     picking_material->CreateMaterial();
 
-    PickableObject cube1 = PickableObject(cube_mesh, material);
-    cube1.SetPickingMat(picking_material);
-    cube1.SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
-	cube1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(60.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
-    cube1.SetIndex(1);
+	Engine::Mesh*  sphere_mesh1 = new Engine::Mesh();
+	geometry.GenerateSphere(sphere_mesh1, 1.0);
 
-    PickableObject cube2 = PickableObject(cube_mesh, material);
-    cube2.SetPickingMat(picking_material);
-    cube2.SetPosition(glm::vec3(0.0f, -2.0f, 0.0f));
-    cube2.SetIndex(2);
+	Engine::Mesh*  sphere_mesh2 = new Engine::Mesh();
+	geometry.GenerateSphere(sphere_mesh2, 2.0);
+
+	Engine::Mesh* cone_mesh = new Engine::Mesh();
+	geometry.GenerateCone(cone_mesh, 0.5, 1.0);
+
+	Engine::Mesh* cylinder_mesh = new Engine::Mesh();
+	geometry.GenerateCylinder(cylinder_mesh, 0.3, 0.8);
+
+    PickableObject sphere1 = PickableObject(sphere_mesh1, material);
+    sphere1.SetPickingMat(picking_material);
+    sphere1.SetPosition(glm::vec3(0.0f, 2.0f, 0.0f));
+	sphere1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(60.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
+    sphere1.SetIndex(1);
+
+    PickableObject sphere2 = PickableObject(sphere_mesh2, material);
+    sphere2.SetPickingMat(picking_material);
+    sphere2.SetPosition(glm::vec3(0.0f, -2.0f, 0.0f));
+    sphere2.SetIndex(2);
     // TODO: Add parent (cube2) to cube1 (Slide No. 14)
-    cube1.AddParent(&cube2);
+    sphere2.AddParent(&sphere1);
 
-	Engine::Mesh*  sphere_mesh = new Engine::Mesh();
-	sphere_mesh = new Engine::Mesh();
-	geometry.GenerateCylinder(sphere_mesh, 2.0, 2.0);
+	PickableObject cone1 = PickableObject(cone_mesh, material);
+	cone1.SetPickingMat(picking_material);
+	cone1.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	cone1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+	cone1.SetPosition(glm::vec3(-0.5f, 0.0f, 0.0f));
+	cone1.SetIndex(3);
+	// TODO: Add parent (cube2) to cube1 (Slide No. 14)
+	cone1.AddParent(&sphere1);
 
-	Engine::RenderObject* sphere = new Engine::RenderObject(sphere_mesh, material);
-	sphere->SetPosition(glm::vec3(0, 0, 3));
+	PickableObject cylinder1 = PickableObject(cylinder_mesh, material);
+	cylinder1.SetPickingMat(picking_material);
+	cylinder1.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	cylinder1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+	cylinder1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+	cylinder1.SetPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
+	cylinder1.SetIndex(4);
+	cylinder1.AddParent(&sphere2);
+
+	PickableObject cylinder2 = PickableObject(cylinder_mesh, material);
+	cylinder2.SetPickingMat(picking_material);
+	cylinder2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	cylinder2.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
+	cylinder2.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+	cylinder2.SetPosition(glm::vec3(2.0f, 0.0f, 0.0f));
+	cylinder2.SetIndex(5);
+	cylinder2.AddParent(&sphere2);
+
+
+
 
 	Snowman snowman = Snowman();
-	snowman.head = &cube1;
-	snowman.body = &cube2;
+	snowman.head = &sphere1;
+	snowman.body = &sphere2;
 	
 
 	// Create star objects
@@ -214,8 +281,8 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render your objects that you want to select using mouse interaction here
-        cube1.RenderPicking(main_camera);
-        cube2.RenderPicking(main_camera);
+        sphere1.RenderPicking(main_camera);
+        sphere2.RenderPicking(main_camera);
         
         // Second Pass: Object Rendering (Slide No. 11)
         // Drawing object again
@@ -227,14 +294,20 @@ int main(int argc, char** argv)
 
         // Todo: Render object with main camera in the loop
 
-        material->UpdateColor(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f));
-        cube1.Render(main_camera);
-        material->UpdateColor(glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
-        cube2.Render(main_camera);
+        material->UpdateColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+		sphere1.Render(main_camera);
+        material->UpdateColor(glm::vec4(0.5f, 1.0f, 1.0f, 1.0f));
+        sphere2.Render(main_camera);
+
+		material->UpdateColor(glm::vec4(1.0f, 0.2f, 1.0f, 0.0f));
+		cone1.Render(main_camera);
+
+		cylinder1.Render(main_camera);
+		cylinder2.Render(main_camera);
 		
 		material->UpdateColor(glm::vec4(1.0f, 215.0f/ 256.0f, 0.0f,1.0f));
 		animation->Animate(main_camera, elapsed_time);
-		sphere->Render(main_camera);
+
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
 
@@ -244,6 +317,15 @@ int main(int argc, char** argv)
 
     // Delete resources
     delete main_camera;
+	delete cube_mesh;
+	delete animation;
+	delete star_mesh;
+	delete material;
+	delete picking_material;
+	delete sphere_mesh1;
+	delete sphere_mesh2;
+	delete cone_mesh;
+	delete cylinder_mesh;
 
     glfwTerminate();
     return 0;
