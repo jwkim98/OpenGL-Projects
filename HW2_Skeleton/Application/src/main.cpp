@@ -60,10 +60,6 @@ static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action
     }
 }
 
-
-
-
-
 // TODO: Fill up GLFW cursor position callback function
 static void CursorPosCallback(GLFWwindow* a_window, double a_xpos, double a_ypos)
 {
@@ -170,6 +166,13 @@ int main(int argc, char** argv)
     // TODO: Add parent (cube2) to cube1 (Slide No. 14)
     cube1.AddParent(&cube2);
 
+	Engine::Mesh*  sphere_mesh = new Engine::Mesh();
+	sphere_mesh = new Engine::Mesh();
+	geometry.GenerateCylinder(sphere_mesh, 2.0, 2.0);
+
+	Engine::RenderObject* sphere = new Engine::RenderObject(sphere_mesh, material);
+	sphere->SetPosition(glm::vec3(0, 0, 3));
+
 	Snowman snowman = Snowman();
 	snowman.head = &cube1;
 	snowman.body = &cube2;
@@ -231,6 +234,7 @@ int main(int argc, char** argv)
 		
 		material->UpdateColor(glm::vec4(1.0f, 215.0f/ 256.0f, 0.0f,1.0f));
 		animation->Animate(main_camera, elapsed_time);
+		sphere->Render(main_camera);
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
 

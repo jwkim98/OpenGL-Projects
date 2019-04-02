@@ -11,9 +11,12 @@ class Animation
 {
 private:
     std::vector<Engine::RenderObject*> _objects;
+	std::vector<Engine::RenderObject*> _snowmanParts;
 public:
     Animation();
     ~Animation();
+
     void AddObject(Engine::RenderObject* object);
     void Animate(Engine::Camera* cam, float deltaTime);
+	void AnimateSnowman(Engine::Camera* cam, float deltaTime);
 };

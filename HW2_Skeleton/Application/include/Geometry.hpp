@@ -7,6 +7,10 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <Mesh.hpp>
 
+using vec3 = glm::vec3;
+using vec4 = glm::vec4;
+using mat4 = glm::mat4;
+
 class Geometry
 {
 private:
@@ -23,6 +27,11 @@ public:
 	void GenerateTriangleMesh(Engine::Mesh* mesh);
 	void GenerateLine(Engine::Mesh* mesh);
 	void GenerateStar(Engine::Mesh* mesh);
+
+	void Geometry::GenerateSphere(Engine::Mesh* mesh, double radius);
+	void Geometry::GenerateCone(Engine::Mesh* mesh, double radius, double height);
+	void Geometry::GenerateCylinder(Engine::Mesh* mesh, double radius, double height);
+	void Geometry::Triple(Engine::Mesh* mesh, vec4 vec_a, vec4 vec_b, vec4 vec_c);
 
 	void AddChild(Geometry *geometry);
 };

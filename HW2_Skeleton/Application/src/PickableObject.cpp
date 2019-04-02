@@ -56,7 +56,6 @@ void PickableObject::RenderPicking(Engine::Camera* cam)
         }
         else
         {
-
             glBindBuffer(GL_ARRAY_BUFFER, _mesh->GetVbo());
             glDrawArrays(drawMode, 0, numElements);
         }

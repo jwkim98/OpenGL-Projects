@@ -33,3 +33,8 @@ void Animation::Animate(Engine::Camera* cam, float deltaTime)
         }
     }
 }
+
+void Animation::AnimateSnowman(Engine::Camera* cam, float deltaTime)
+{
+	
+}

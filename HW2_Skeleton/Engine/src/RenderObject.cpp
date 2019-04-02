@@ -80,7 +80,6 @@ namespace Engine
             parent_orientation = parent->GetOrientation();
             parent_scale = glm::scale(glm::mat4(1.0f), parent->GetScale());
             parent_WorldTransform = parent->GetWorldTransform();
-
         }
         glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), _position);
         glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), _scale);
