@@ -91,7 +91,7 @@ void Geometry::GenerateSphere(Engine::Mesh* mesh, double radius)
 
 	for(double y_angle = -PI/2 ; y_angle <= PI/2; y_angle += y_step)
 	{
-		double tempRadius= radius * cos(y_angle); //radius of circle
+		double tempRadius= radius * cos(y_angle); //_radius of circle
 		double tempRadius_previous = radius * cos(y_angle - y_step);
 		double z_pos = radius * sin(y_angle); // position of z axis
 		double z_pos_previous = radius * sin(y_angle - y_step);

@@ -27,19 +27,16 @@ void Animation::Animate(Engine::Camera* cam, float deltaTime)
     // Rotation: 10-degree per second
     for (int i = 0; i < _objects.size(); i++)
     {
-        _objects[i]->SetOrientation(glm::rotate(_objects[i]->GetOrientation(), glm::radians(deltaTime * 10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-        _objects[i]->SetPosition(_objects[i]->GetPosition() + glm::vec3(deltaTime * -1.0f, deltaTime * -1.0f, 0.0));
-        _objects[i]->Render(cam);
+        //_objects[i]->SetOrientation(glm::rotate(_objects[i]->GetOrientation(), glm::radians(deltaTime * 10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
+        //_objects[i]->SetPosition(_objects[i]->GetPosition() + glm::vec3(deltaTime * -1.0f, deltaTime * -1.0f, 0.0));
+		_objects.at(i)->UpdateOrientation(true);
+    	_objects[i]->Render(cam);
 
         // Reposition object after its out of sight.
         if (_objects[i]->GetPosition().y < -5.0f)
         {
             _objects[i]->SetPosition(glm::vec3(-5.0f + 10.0f * ((rand() % 255) / 255.0f), 5.0f * ((rand() % 255) / 255.0f), 0.0f));
+			//_objects[i]->UpdateOrientation(true);
         }
     }
-}
-
-void Animation::AnimateSnowman(Engine::Camera* cam, float deltaTime)
-{
-	
 }

@@ -1,7 +1,11 @@
 #include <RenderObject.hpp>
-
+//#include <TypeAlias.hpp>
+using vec3 = glm::vec3;
+using vec4 = glm::vec4;
+using mat4 = glm::mat4;
 namespace Engine
 {
+
     RenderObject::RenderObject() : _position(glm::vec3(0.0f)), _orientation(glm::mat4(1.0f)), _scale(glm::vec3(1.0f, 1.0f, 1.0f)), _index(-1), _rotation_speed(0.0f)
     {
     }
@@ -65,6 +69,30 @@ namespace Engine
 
         glBindVertexArray(0);
     }
+
+	SnowFlake::SnowFlake(Mesh* mesh, Material* material) : RenderObject(mesh, material)
+	{
+    }
+
+	void SnowFlake::SetProperties(double radius, double verticalSpeed, double horizontalSpeed, double radianSpeed)
+    {
+		_radius = radius;
+		_verticalSpeed = verticalSpeed;
+		_horizontalSpeed = horizontalSpeed;
+		_radianSpeed = radianSpeed;
+    }
+
+	void SnowFlake::UpdateOrientation(bool direction)
+	{
+		vec3 currentPosition = GetPosition();
+		currentPosition -= vec3(_horizontalSpeed, _verticalSpeed, 0);
+
+		_currentRadius += _radianSpeed;
+		double posX = _radius * cos(_currentRadius);
+		double posY = _radius * sin(_currentRadius);
+		vec3 angleVector(posX, posY, 0);
+		SetPosition(currentPosition + angleVector);
+	}
 
 
     glm::mat4 RenderObject::GetWorldTransform()

@@ -34,8 +34,8 @@ int g_framebuffer_width = 1024;
 int g_framebuffer_height = 768;
 
 
-bool head_spin = false;
-bool body_spin = false;
+bool move_head = false;
+bool move_arm = false;
 
 // TODO: Implement gradient rectangle mesh generator for background
 void GenerateGradientRectangle(Engine::Mesh* mesh)
@@ -150,48 +150,53 @@ void GenerateSnowflake(Engine::Mesh* mesh, float length, float positionX, float 
 		mesh->CreateMesh();
 	}
 }
-
+static double diff_x = 0;
+static double diff_y = 0;
 // TODO: Fill up GLFW mouse button callback function
 static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a_mods)
 {
+	double xpos, ypos;
+	glfwGetCursorPos(a_window, &xpos, &ypos);
+	xpos = xpos / ((double)g_window_width) * ((double)g_framebuffer_width);
+	ypos = ypos / ((double)g_window_height) * ((double)g_framebuffer_height);
+
     //example code for get x position and y position of mouse click
     if (a_button == GLFW_MOUSE_BUTTON_LEFT && a_action == GLFW_PRESS)
     {
-        double xpos, ypos;
-        glfwGetCursorPos(a_window, &xpos, &ypos);
-        xpos = xpos / ((double)g_window_width) * ((double)g_framebuffer_width);
-        ypos = ypos / ((double)g_window_height) * ((double)g_framebuffer_height);
-
         int target = pick((int)xpos, (int)ypos, g_framebuffer_width, g_framebuffer_height);
         std::cout << "Picked object index: " << target << std::endl;
 
 		if (target == 1)
 		{
-			head_spin = !head_spin;
+			move_head = !move_head;
 		}
 		if (target == 2)
 		{
-			body_spin = !body_spin;
+			move_arm = !move_arm;
 		}
     }
 }
 
-static double diff_x;
-static double diff_y;
 
 // TODO: Fill up GLFW cursor position callback function
 static void CursorPosCallback(GLFWwindow* a_window, double xpos, double ypos)
 {
 	static double previous_xpos = 0, previous_ypos = 0;
+	if (glfwGetMouseButton(a_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	{
+		previous_xpos = 0;
+		previous_ypos = 0;
+		return;
+	}
 	if(previous_xpos == 0 && previous_ypos == 0)
 	{
 		previous_xpos = xpos;
 		previous_ypos = ypos;
 	}
-
+	
 	diff_x = xpos - previous_xpos;
 	diff_y = ypos - previous_ypos;
-
+	
 	previous_xpos = xpos;
 	previous_ypos = ypos;
 }
@@ -339,14 +344,13 @@ int main(int argc, char** argv)
 	GenerateGradientRectangle(&background_mesh);
 
 	Engine::RenderObject background = Engine::RenderObject(&background_mesh, &background_material);
-	
-
-
 
 	Snowman snowman = Snowman();
-	snowman.head = &sphere1;
-	snowman.body = &sphere2;
-	
+	snowman.Head = &sphere1;
+	snowman.Body = &sphere2;
+	snowman.RightArm = &cylinder1;
+	snowman.LeftArm = &cylinder2;
+	snowman.Nose = &cone1;
 
 	std::deque<Engine::Mesh*> star_mesh_list;
 	for( auto i =0; i < 20; i++)
@@ -359,7 +363,8 @@ int main(int argc, char** argv)
 	// Create star objects
 	for (int i = 0; i < 20; i++)
 	{
-		Engine::RenderObject* star = new Engine::RenderObject(star_mesh_list.at(i), &background_material);
+		Engine::RenderObject* star = new Engine::SnowFlake(star_mesh_list.at(i), &background_material);
+		star->SetProperties(0.2,  ((rand() % 255) / 1000.0f),((rand() % 255) / 1000.0f), glm::pi<double>()/(20 + rand()%20));
 		star->SetPosition(glm::vec3(-5.0f + 10.0f * ((rand() % 255) / 255.0f), 5.0f * ((rand() % 255) / 255.0f), 0.0f));
 		star->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
 		animation->AddObject(star);
@@ -374,13 +379,13 @@ int main(int argc, char** argv)
         float elapsed_time = total_time - prev_time;
         prev_time = total_time;
 
-		if (head_spin)
+		if (move_head)
 		{
-			//snowman.rotate_head();
+			snowman.move_nose(100, elapsed_time);
 		}
-		if (body_spin)
+		if (move_arm)
 		{
-			snowman.rotate_body();
+			snowman.move_arm(100, elapsed_time);
 		}
 
 		if(diff_x != 0 || diff_y != 0)
@@ -389,7 +394,6 @@ int main(int argc, char** argv)
 			diff_x = 0;
 			diff_y = 0;
 		}
-
         // First Pass: Object Selection (Slide No. 20)
         // this is for picking the object using mouse interaction
         // binding framebuffer

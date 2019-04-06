@@ -13,6 +13,7 @@
 
 namespace Engine
 {
+	using vec3 = glm::vec3;
     class RenderObject
     {
     private:
@@ -31,12 +32,9 @@ namespace Engine
 		//TO DO implement hierarchical structure
 		RenderObject *parent = NULL;
 
-		
-
     public:
         RenderObject();
         RenderObject(Mesh* mesh, Material* material);
-
 
 		void ChangeMaterial(Material* mat);
         void Render(Camera* cam);
@@ -55,7 +53,28 @@ namespace Engine
 
 		void AddParent(RenderObject *parent_object) { parent = parent_object; };
 
+		virtual void UpdateOrientation(bool direction)
+		{
+			// do nothing
+		}
+
+		virtual void SetProperties(double radius, double verticalSpeed, double horizontalSpeed, double radianSpeed){}
 
 
     };
+
+	class SnowFlake : public RenderObject
+	{
+	public:
+		SnowFlake(Mesh* mesh, Material* material);
+		void SetProperties(double radius, double verticalSpeed, double horizontalSpeed, double radianSpeed);
+		void UpdateOrientation(bool direction) override;
+	private:
+		const double _gravity = 9.8;
+		double _radius = 0;
+		double _verticalSpeed = 0;
+		double _horizontalSpeed = 0;
+		double _radianSpeed = 0;
+		double _currentRadius = 0;
+	};
 }

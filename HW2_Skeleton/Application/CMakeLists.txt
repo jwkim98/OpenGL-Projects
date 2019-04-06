@@ -3,13 +3,15 @@ project(app_project)
 file(GLOB APP_SRC "src/*.cpp")
 file(GLOB APP_HEADERS "include/*.hpp")
 
-if(MSVC)
+if(MSVC)  
     source_group("Header Files" FILES ${APP_HEADERS})
 
     source_group("Source Files" FILES ${APP_SRC})
 endif()
 
 add_executable(App ${APP_SRC} ${APP_HEADERS})
+
+#include_directories(include)
 
 target_include_directories(App
     PUBLIC include
