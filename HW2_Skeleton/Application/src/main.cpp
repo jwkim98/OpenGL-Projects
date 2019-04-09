@@ -34,8 +34,10 @@ int g_framebuffer_width = 1024;
 int g_framebuffer_height = 768;
 
 
-bool move_head = false;
-bool move_arm = false;
+bool move_head1 = false;
+bool move_arm1 = false;
+bool move_head2 = false;
+bool move_arm2 = false;
 
 // TODO: Implement gradient rectangle mesh generator for background
 void GenerateGradientRectangle(Engine::Mesh* mesh)
@@ -150,8 +152,7 @@ void GenerateSnowflake(Engine::Mesh* mesh, float length, float positionX, float 
 		mesh->CreateMesh();
 	}
 }
-static double diff_x = 0;
-static double diff_y = 0;
+
 // TODO: Fill up GLFW mouse button callback function
 static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action, int a_mods)
 {
@@ -166,40 +167,77 @@ static void MouseButtonCallback(GLFWwindow* a_window, int a_button, int a_action
         int target = pick((int)xpos, (int)ypos, g_framebuffer_width, g_framebuffer_height);
         std::cout << "Picked object index: " << target << std::endl;
 
-		if (target == 1)
+		switch(target)
 		{
-			move_head = !move_head;
-		}
-		if (target == 2)
-		{
-			move_arm = !move_arm;
+		case 1:
+			move_head1 = !move_head1; break;
+		case 2:
+			move_arm1 = !move_arm1; break;
+		case 3:
+			move_head2 = !move_head2; break;
+		case 4:
+			move_arm2 = !move_arm2; break;
+		default:
+			return;
 		}
     }
 }
 
+static double diff_x_left = 0;
+static double diff_y_left = 0;
+static double diff_x_right = 0;
+static double diff_y_right = 0;
 
 // TODO: Fill up GLFW cursor position callback function
 static void CursorPosCallback(GLFWwindow* a_window, double xpos, double ypos)
 {
-	static double previous_xpos = 0, previous_ypos = 0;
-	if (glfwGetMouseButton(a_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	static double previous_xpos_left = 0, previous_ypos_left = 0;
+	static double previous_xpos_right = 0, previous_ypos_right = 0;
+	if (glfwGetMouseButton(a_window, GLFW_MOUSE_BUTTON_LEFT) != GLFW_RELEASE)
 	{
-		previous_xpos = 0;
-		previous_ypos = 0;
-		return;
+		if (previous_xpos_left == 0 && previous_ypos_left == 0)
+		{
+			previous_xpos_left = xpos;
+			previous_ypos_left = ypos;
+		}
+
+		diff_x_left = xpos - previous_xpos_left;
+		diff_y_left = ypos - previous_ypos_left;
+
+		previous_xpos_left = xpos;
+		previous_ypos_left = ypos;
 	}
-	if(previous_xpos == 0 && previous_ypos == 0)
+	else
 	{
-		previous_xpos = xpos;
-		previous_ypos = ypos;
+		previous_xpos_left = 0;
+		previous_ypos_left = 0;
 	}
-	
-	diff_x = xpos - previous_xpos;
-	diff_y = ypos - previous_ypos;
-	
-	previous_xpos = xpos;
-	previous_ypos = ypos;
+
+	if (glfwGetMouseButton(a_window, GLFW_MOUSE_BUTTON_RIGHT) != GLFW_RELEASE)
+	{
+		if (previous_xpos_right == 0 && previous_ypos_right == 0)
+		{
+			previous_xpos_right = xpos;
+			previous_ypos_right = ypos;
+		}
+
+		diff_x_right = xpos - previous_xpos_right;
+		diff_y_right = ypos - previous_ypos_right;
+
+		previous_xpos_right = xpos;
+		previous_ypos_right = ypos;
+	}
+	else
+	{
+		previous_xpos_right = 0;
+		previous_ypos_right = 0;
+	}
+
 }
+static bool JumpRequest2 = false;
+static bool JumpRequest1 = false;
+static bool Rotate1 = false;
+static bool Rotate2 = false;
 
 static void KeyboardCallback(GLFWwindow* a_window, int a_key, int a_scancode, int a_action, int a_mods)
 {
@@ -212,6 +250,22 @@ static void KeyboardCallback(GLFWwindow* a_window, int a_key, int a_scancode, in
             std::cout << "keymaps:" << std::endl;
             std::cout << "h\t\t Help command" << std::endl;
             break;
+		case GLFW_KEY_1:
+			std::cout << "jump!" << std::endl;
+			JumpRequest1 = true;
+			break;
+		case GLFW_KEY_2:
+			std::cout << "jump2!" << std::endl;
+			JumpRequest2 = true;
+			break;
+		case GLFW_KEY_A:
+			std::cout << "rotate1" << std::endl;
+			Rotate1 = !Rotate1;
+			break;
+		case GLFW_KEY_B:
+			std::cout << "rotate2" << std::endl;
+			Rotate2 = !Rotate2;
+			break;
         default:
             break;
         }
@@ -274,68 +328,7 @@ int main(int argc, char** argv)
     // TODO: Create mesh and material (in main.cpp) Slide No. 10 (Define cube mesh, material), No. 18 (Define pickable object)
 	Geometry geometry = Geometry();
 
-    Engine::Mesh* cube_mesh = new Engine::Mesh();
-    geometry.GenerateCube(cube_mesh);
 
-	Animation* animation = new Animation();
-
-    DefaultMaterial* material = new DefaultMaterial();
-    material->CreateMaterial();
-
-    PickingMaterial* picking_material = new PickingMaterial();
-    picking_material->CreateMaterial();
-
-	Engine::Mesh*  sphere_mesh1 = new Engine::Mesh();
-	geometry.GenerateSphere(sphere_mesh1, 1.0);
-
-	Engine::Mesh*  sphere_mesh2 = new Engine::Mesh();
-	geometry.GenerateSphere(sphere_mesh2, 2.0);
-
-	Engine::Mesh* cone_mesh = new Engine::Mesh();
-	geometry.GenerateCone(cone_mesh, 0.5, 1.0);
-
-	Engine::Mesh* cylinder_mesh = new Engine::Mesh();
-	geometry.GenerateCylinder(cylinder_mesh, 0.3, 0.8);
-
-    PickableObject sphere1 = PickableObject(sphere_mesh1, material);
-    sphere1.SetPickingMat(picking_material);
-    sphere1.SetPosition(glm::vec3(0.0f, 2.0f, 2.0f));
-	sphere1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(60.0f), glm::vec3(1.0f, 1.0f, 1.0f)));
-    sphere1.SetIndex(1);
-
-    PickableObject sphere2 = PickableObject(sphere_mesh2, material);
-    sphere2.SetPickingMat(picking_material);
-    sphere2.SetPosition(glm::vec3(0.0f, -2.0f, 0.0f));
-    sphere2.SetIndex(2);
-    // TODO: Add parent (cube2) to cube1 (Slide No. 14)
-    sphere2.AddParent(&sphere1);
-
-	PickableObject cone1 = PickableObject(cone_mesh, material);
-	cone1.SetPickingMat(picking_material);
-	cone1.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	cone1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-	cone1.SetPosition(glm::vec3(-0.5f, 0.0f, 0.0f));
-	cone1.SetIndex(3);
-	// TODO: Add parent (cube2) to cube1 (Slide No. 14)
-	cone1.AddParent(&sphere1);
-
-	PickableObject cylinder1 = PickableObject(cylinder_mesh, material);
-	cylinder1.SetPickingMat(picking_material);
-	cylinder1.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	cylinder1.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-	cylinder1.SetOrientation(glm::rotate(cylinder1.GetOrientation(), glm::radians(10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-	cylinder1.SetPosition(glm::vec3(-2.0f, 0.0f, 0.0f));
-	cylinder1.SetIndex(4);
-	cylinder1.AddParent(&sphere2);
-
-	PickableObject cylinder2 = PickableObject(cylinder_mesh, material);
-	cylinder2.SetPickingMat(picking_material);
-	cylinder2.SetPosition(glm::vec3(0.0f, 0.0f, 0.0f));
-	cylinder2.SetOrientation(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 0.0f)));
-	cylinder2.SetOrientation(glm::rotate(cylinder2.GetOrientation(), glm::radians(-10.0f), glm::vec3(0.0f, 0.0f, 1.0f)));
-	cylinder2.SetPosition(glm::vec3(2.0f, 0.0f, 0.0f));
-	cylinder2.SetIndex(5);
-	cylinder2.AddParent(&sphere2);
 
 	DefaultMaterial background_material = DefaultMaterial();
 	background_material.CreatePerVertexMaterial();
@@ -345,12 +338,12 @@ int main(int argc, char** argv)
 
 	Engine::RenderObject background = Engine::RenderObject(&background_mesh, &background_material);
 
-	Snowman snowman = Snowman();
-	snowman.Head = &sphere1;
-	snowman.Body = &sphere2;
-	snowman.RightArm = &cylinder1;
-	snowman.LeftArm = &cylinder2;
-	snowman.Nose = &cone1;
+	Snowman snowman1 = Snowman(1,2);
+	snowman1.SetPosition(vec3(1.0, 0.0, 0.0));
+
+	Snowman snowman2 = Snowman(3,4);
+	snowman2.SetPosition(vec3(-1.0, 0.0, 0.0));
+
 
 	std::deque<Engine::Mesh*> star_mesh_list;
 	for( auto i =0; i < 20; i++)
@@ -360,17 +353,21 @@ int main(int argc, char** argv)
 		star_mesh_list.emplace_back(star_mesh);
 	}
 
+	Animation animation;
+
 	// Create star objects
 	for (int i = 0; i < 20; i++)
 	{
 		Engine::RenderObject* star = new Engine::SnowFlake(star_mesh_list.at(i), &background_material);
 		star->SetProperties(0.2,  ((rand() % 255) / 1000.0f),((rand() % 255) / 1000.0f), glm::pi<double>()/(20 + rand()%20));
-		star->SetPosition(glm::vec3(-5.0f + 10.0f * ((rand() % 255) / 255.0f), 5.0f * ((rand() % 255) / 255.0f), 0.0f));
+		star->SetPosition(glm::vec3(-5.0f + 10.0f * ((rand() % 255) / 255.0f), 5.0f * ((rand() % 255) / 255.0f), -5.0f));
 		star->SetScale(glm::vec3(0.2f, 0.2f, 0.2f));
-		animation->AddObject(star);
+		animation.AddObject(star);
 	}
 
     float prev_time = 0;
+	bool start1 = true;
+	bool start2 = true;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(g_window) && glfwGetKey(g_window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
@@ -379,21 +376,83 @@ int main(int argc, char** argv)
         float elapsed_time = total_time - prev_time;
         prev_time = total_time;
 
-		if (move_head)
+		if (move_head1)
 		{
-			snowman.move_nose(100, elapsed_time);
+			snowman1.MoveNose(100, elapsed_time);
 		}
-		if (move_arm)
+		if (move_arm1)
 		{
-			snowman.move_arm(100, elapsed_time);
+			snowman1.MoveArm(100, elapsed_time);
 		}
 
-		if(diff_x != 0 || diff_y != 0)
+		if (move_head2)
 		{
-			snowman.rotate_head(diff_x/3, diff_y/3);
-			diff_x = 0;
-			diff_y = 0;
+			snowman2.MoveNose(100, elapsed_time);
 		}
+		if (move_arm2)
+		{
+			snowman2.MoveArm(100, elapsed_time);
+		}
+
+		if(Rotate1)
+		{
+			snowman1.RotateHead(4, 0);
+			snowman1.RotateBody(8);
+		}
+
+		if(Rotate2)
+		{
+			snowman2.RotateHead(-4, 0);
+			snowman2.RotateBody(-8);
+		}
+
+
+		if(diff_x_left != 0 || diff_y_left != 0)
+		{
+			snowman1.Move(vec3(diff_x_left/100.0f, -diff_y_left/100.0f, 0));
+			diff_x_left = 0;
+			diff_y_left = 0;
+		}
+
+		if (diff_x_right != 0 || diff_y_right != 0)
+		{
+			snowman2.Move(vec3(diff_x_right / 100.0f, -diff_y_right / 100.0f, 0));
+			diff_x_right = 0;
+			diff_y_right = 0;
+		}
+
+		if(JumpRequest1)
+		{
+			if (start1) {
+				snowman1.Jump(elapsed_time, 1, true);
+				start1 = false;
+			}
+			else
+			{
+				if(!snowman1.Jump(elapsed_time, 5, false))
+				{
+					JumpRequest1 = false;
+					start1 = true;
+				}
+			}
+		}
+
+		if (JumpRequest2)
+		{
+			if (start2) {
+				snowman2.Jump(elapsed_time, 1, true);
+				start2 = false;
+			}
+			else
+			{
+				if (!snowman2.Jump(elapsed_time, 5, false))
+				{
+					JumpRequest2 = false;
+					start2 = true;
+				}
+			}
+		}
+
         // First Pass: Object Selection (Slide No. 20)
         // this is for picking the object using mouse interaction
         // binding framebuffer
@@ -403,8 +462,9 @@ int main(int argc, char** argv)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render your objects that you want to select using mouse interaction here
-        sphere1.RenderPicking(main_camera);
-        sphere2.RenderPicking(main_camera);
+
+		snowman1.RenderPicking(main_camera);
+		snowman2.RenderPicking(main_camera);
         
         // Second Pass: Object Rendering (Slide No. 11)
         // Drawing object again
@@ -416,21 +476,12 @@ int main(int argc, char** argv)
 
         // Todo: Render object with main camera in the loop
 
-        material->UpdateColor(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-		sphere1.Render(main_camera);
-        material->UpdateColor(glm::vec4(0.5f, 1.0f, 1.0f, 1.0f));
-        sphere2.Render(main_camera);
-
-		material->UpdateColor(glm::vec4(1.0f, 0.2f, 1.0f, 0.0f));
-		cone1.Render(main_camera);
-
-		cylinder1.Render(main_camera);
-		cylinder2.Render(main_camera);
-		
-		material->UpdateColor(glm::vec4(1.0f, 215.0f/ 256.0f, 0.0f,1.0f));
-		animation->Animate(main_camera, elapsed_time);
+		animation.Animate(main_camera, elapsed_time);
 
 		background.Render(main_camera);
+
+		snowman1.Render(main_camera);
+		snowman2.Render(main_camera);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(g_window);
@@ -446,14 +497,6 @@ int main(int argc, char** argv)
 
     // Delete resources
     delete main_camera;
-	delete cube_mesh;
-	delete animation;
-	delete material;
-	delete picking_material;
-	delete sphere_mesh1;
-	delete sphere_mesh2;
-	delete cone_mesh;
-	delete cylinder_mesh;
 
     glfwTerminate();
     return 0;

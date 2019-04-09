@@ -13,6 +13,7 @@ private:
     PickingMaterial* _pickingMat;
 
 public:
+	PickableObject() = default;
     PickableObject(Engine::Mesh* mesh, Engine::Material* material);
     void RenderPicking(Engine::Camera* cam);
     void SetPickingMat(PickingMaterial* mat) { _pickingMat = mat; };
