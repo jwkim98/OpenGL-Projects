@@ -82,8 +82,8 @@ void Geometry::GenerateSphere(Engine::Mesh* mesh, double radius)
 	double PI = glm::pi<double>();
 
 	double interval = PI / 60.0;
-	double y_step = 0.01;
-	double x_step = 0.01;
+	double y_step = 0.1;
+	double x_step = 0.1;
 
 
 	std::deque<vec4> position_vector;
@@ -102,7 +102,7 @@ void Geometry::GenerateSphere(Engine::Mesh* mesh, double radius)
 			double y_pos = tempRadius * sin(x_angle);
 			double x_pos_previous = tempRadius * cos(x_angle - x_step);
 			double y_pos_previous = tempRadius * sin(x_angle - x_step);
-
+			
 			double x_pos_down = tempRadius_previous * cos(x_angle);
 			double y_pos_down = tempRadius_previous * sin(x_angle);
 			double x_pos_previous_down = tempRadius_previous * cos(x_angle - x_step);
@@ -119,6 +119,25 @@ void Geometry::GenerateSphere(Engine::Mesh* mesh, double radius)
 			elements += 6;
 		}
 	}
+
+	vec4 topPos(0, 0, radius, 1);
+	double tempRadius = radius * cos((PI / 2) - y_step);
+	double zPosPrevious = radius * sin((PI / 2) - y_step);
+	for (double angle = 0; angle <= 2 * PI; angle += x_step)
+	{
+		double xPre = tempRadius * cos(angle - x_step);
+		double yPre = tempRadius * sin(angle - x_step);
+		double x = tempRadius * cos(angle);
+		double y = tempRadius * sin(angle);
+
+		vec4 pos1(xPre, yPre, zPosPrevious, 1);
+		vec4 pos2(x, y, zPosPrevious, 1);
+
+		Triple(mesh, pos1, pos2, topPos);
+
+		elements += 3;
+	}
+
 	mesh->SetNumElements(elements);
 	mesh->CreateMesh();
 	return;
@@ -152,11 +171,11 @@ void Geometry::GenerateCone(Engine::Mesh* mesh, double radius, double height)
 
 	for(double h = height_precision; h < height ; h+=height_precision)
 	{
-		double current_height = h;
-		double previous_height = h - height_precision;
+		const double current_height = h;
+		const double previous_height = h - height_precision;
 
-		double current_radius = (radius / height) * (height - current_height);
-		double previous_radius = (radius / height) * (height - previous_height);
+		const double current_radius = (radius / height) * (height - current_height);
+		const double previous_radius = (radius / height) * (height - previous_height);
 
 		for(double angle = 0; angle < 2*glm::pi<double>(); angle += precision)
 		{
@@ -181,6 +200,24 @@ void Geometry::GenerateCone(Engine::Mesh* mesh, double radius, double height)
 			num_elements += 6;
 		}
 	}
+
+	const double currentHeight = height - precision;
+	const double currentRadius = radius * (precision / height);
+	vec4 point = vec4(0, 0, height, 1);
+
+	for (double angle = 0; angle < 2 * glm::pi<double>(); angle += precision)
+	{
+		double xPre = currentRadius * cos(angle - precision);
+		double yPre = currentRadius * sin(angle - precision);
+		double x = currentRadius * cos(angle);
+		double y = currentRadius * sin(angle);
+	
+		vec4 pos1 = vec4(xPre, yPre, currentHeight, 1);
+		vec4 pos2 = vec4(x, y, currentHeight, 1);
+		Triple(mesh, pos1, pos2, point);
+		num_elements += 3;
+	}
+
 	mesh->SetNumElements(num_elements);
 	mesh->CreateMesh();
 }
